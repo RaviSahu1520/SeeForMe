@@ -8,11 +8,11 @@ import pytesseract
 from gtts import gTTS
 import io
 import base64
-import apikey
 import logging
+import streamlit as st
 
 # Configure Google API Key
-GOOGLE_API_KEY = apikey.GOOGLE_API_KEY
+api_key = st.secrets["google_genai"]["api_key"]
 
 # Initialize models through LangChain with correct model names
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
