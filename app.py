@@ -10,15 +10,12 @@ import io
 import base64
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure Google API Key from Streamlit secrets
+GOOGLE_API_KEY = st.secrets["google_genai"]["api_key"]
 
-# Configure Google API Key
-api_key = st.secrets["google_genai"]["api_key"]
-
-# Initialize models with correct API key
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
-vision_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
+# Initialize models
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
+vision_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
 
 # Error handling function
 def handle_error(error):
@@ -91,7 +88,7 @@ def detect_objects_and_obstacles(image):
     except Exception as e:
         handle_error(e)
 
-# Text extraction function
+# Text extraction and processing
 def extract_and_process_text(image):
     try:
         extracted_text = pytesseract.image_to_string(image)
@@ -191,9 +188,9 @@ def text_to_speech(text):
     except Exception as e:
         handle_error(e)
 
-# Streamlit app main
+# Main app
 def main():
-    st.set_page_config(page_title="Vision Assistant", layout="wide")
+    st.set_page_config(page_title="SeeForMe", layout="wide")
 
     st.title("SeeForMe : AI Assistant for Visually Impaired")
 
@@ -210,10 +207,14 @@ def main():
     uploaded_file = st.file_uploader("Upload an image", type=['jpg', 'jpeg', 'png'])
 
     if uploaded_file is not None:
-        col1, col2 = st.columns([1, 1])
-
-        with col1:
+        try:
             image = Image.open(uploaded_file).convert("RGB")
+        except Exception as e:
+            st.error("Invalid image. Please upload a valid JPG or PNG file.")
+            return
+
+        col1, col2 = st.columns([1, 1])
+        with col1:
             st.image(image, caption="Uploaded Image", use_container_width=True)
 
         with col2:
@@ -250,7 +251,12 @@ def main():
             else:  # Task Assistance
                 task_type = st.selectbox(
                     "Select Task Type",
-                    ["item_identification", "label_reading", "navigation_help", "daily_tasks"],
+                    [
+                        "item_identification",
+                        "label_reading",
+                        "navigation_help",
+                        "daily_tasks"
+                    ],
                     format_func=lambda x: x.replace('_', ' ').title()
                 )
 
