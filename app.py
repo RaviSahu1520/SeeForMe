@@ -9,14 +9,16 @@ from gtts import gTTS
 import io
 import base64
 import logging
-import streamlit as st
+
+# Configure logging
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Configure Google API Key
 api_key = st.secrets["google_genai"]["api_key"]
 
-# Initialize models through LangChain with correct model names
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
-vision_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
+# Initialize models with correct API key
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
+vision_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
 
 # Error handling function
 def handle_error(error):
@@ -26,7 +28,6 @@ def handle_error(error):
 # Scene understanding function
 def scene_understanding(image):
     try:
-        # Generate detailed scene description using LangChain Vision model
         image_bytes = io.BytesIO()
         image.save(image_bytes, format='PNG')
         image_bytes = image_bytes.getvalue()
@@ -60,7 +61,6 @@ def scene_understanding(image):
 # Object detection function
 def detect_objects_and_obstacles(image):
     try:
-        # Detect objects and potential obstacles in the scene
         image_bytes = io.BytesIO()
         image.save(image_bytes, format='PNG')
         image_bytes = image_bytes.getvalue()
@@ -94,7 +94,6 @@ def detect_objects_and_obstacles(image):
 # Text extraction function
 def extract_and_process_text(image):
     try:
-        # Extract and enhance text from image
         extracted_text = pytesseract.image_to_string(image)
 
         if not extracted_text.strip():
@@ -124,7 +123,6 @@ def extract_and_process_text(image):
 # Task assistance function
 def provide_task_assistance(image, task_type):
     try:
-        # Provide personalized assistance based on task type
         image_bytes = io.BytesIO()
         image.save(image_bytes, format='PNG')
         image_bytes = image_bytes.getvalue()
@@ -185,7 +183,6 @@ def provide_task_assistance(image, task_type):
 # Text-to-speech function
 def text_to_speech(text):
     try:
-        # Convert text to speech and return bytes for Streamlit audio player
         tts = gTTS(text=text, lang='en')
         mp3_fp = io.BytesIO()
         tts.write_to_fp(mp3_fp)
@@ -194,14 +191,15 @@ def text_to_speech(text):
     except Exception as e:
         handle_error(e)
 
+# Streamlit app main
 def main():
     st.set_page_config(page_title="Vision Assistant", layout="wide")
 
     st.title("SeeForMe : AI Assistant for Visually Impaired")
 
-    st.sidebar.title("About the SeeForMe")
+    st.sidebar.title("About SeeForMe")
     st.sidebar.info(
-         "AI Assistant for Visually Impaired\n"
+        "AI Assistant for Visually Impaired\n"
         "• Upload any image to:\n"
         "• Get detailed scene descriptions\n"
         "• Read text from images\n"
@@ -209,18 +207,16 @@ def main():
         "• Receive task-specific guidance"
     )
 
-    # Main content
     uploaded_file = st.file_uploader("Upload an image", type=['jpg', 'jpeg', 'png'])
 
     if uploaded_file is not None:
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            image = Image.open(uploaded_file)
+            image = Image.open(uploaded_file).convert("RGB")
             st.image(image, caption="Uploaded Image", use_container_width=True)
 
         with col2:
-            # Feature selection
             feature = st.radio(
                 "Select Feature",
                 ["Scene Description", "Text Reading", "Object Detection", "Task Assistance"],
@@ -254,12 +250,7 @@ def main():
             else:  # Task Assistance
                 task_type = st.selectbox(
                     "Select Task Type",
-                    [
-                        "item_identification",
-                        "label_reading",
-                        "navigation_help",
-                        "daily_tasks"
-                    ],
+                    ["item_identification", "label_reading", "navigation_help", "daily_tasks"],
                     format_func=lambda x: x.replace('_', ' ').title()
                 )
 
