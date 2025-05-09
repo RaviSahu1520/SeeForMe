@@ -217,7 +217,8 @@ def main():
 
         with col1:
             image = Image.open(uploaded_file)
-            st.image(image, caption="Uploaded Image", use_container_width=True)
+            # Fixed line - removed use_container_width parameter
+            st.image(image, caption="Uploaded Image", width=None)
 
         with col2:
             # Feature selection
@@ -228,7 +229,8 @@ def main():
             )
 
             if feature == "Scene Description":
-                if st.button("Analyze Scene", use_container_width=True):
+                # Fixed button - removed use_container_width parameter
+                if st.button("Analyze Scene"):
                     with st.spinner("Analyzing the scene..."):
                         description = scene_understanding(image)
                         st.write(description)
@@ -236,7 +238,8 @@ def main():
                         st.audio(audio_bytes, format='audio/mp3')
 
             elif feature == "Text Reading":
-                if st.button("Extract & Read Text", use_container_width=True):
+                # Fixed button - removed use_container_width parameter
+                if st.button("Extract & Read Text"):
                     with st.spinner("Processing text..."):
                         text_content = extract_and_process_text(image)
                         st.write(text_content)
@@ -244,7 +247,8 @@ def main():
                         st.audio(audio_bytes, format='audio/mp3')
 
             elif feature == "Object Detection":
-                if st.button("Detect Objects", use_container_width=True):
+                # Fixed button - removed use_container_width parameter
+                if st.button("Detect Objects"):
                     with st.spinner("Analyzing objects and obstacles..."):
                         objects_info = detect_objects_and_obstacles(image)
                         st.write(objects_info)
@@ -263,7 +267,8 @@ def main():
                     format_func=lambda x: x.replace('_', ' ').title()
                 )
 
-                if st.button("Get Assistance", use_container_width=True):
+                # Fixed button - removed use_container_width parameter
+                if st.button("Get Assistance"):
                     with st.spinner("Generating guidance..."):
                         guidance = provide_task_assistance(image, task_type)
                         st.write(guidance)
