@@ -1,0 +1,16 @@
+# Core packages
+streamlit==1.33.0
+Pillow==10.3.0
+pytesseract==0.3.10
+gTTS==2.5.1
+
+# LangChain and Google Generative AI
+langchain==0.1.14
+langchain-core==0.1.47
+langchain-google-genai==0.0.11
+google-generativeai==0.4.1
+
+# Utility packages
+tqdm==4.66.2
+
+# Logging (optional, standard lib in Python, no need to install separately)
