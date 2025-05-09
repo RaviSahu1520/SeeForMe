@@ -8,14 +8,15 @@ import pytesseract
 from gtts import gTTS
 import io
 import base64
+import streamlit as st
 import logging
 
-# Configure Google API Key from Streamlit secrets
-GOOGLE_API_KEY = st.secrets["google_genai"]["api_key"]
+# Configure Google API Key
+api_key = st.secrets["google_genai"]["api_key"]
 
-# Initialize models
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
-vision_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
+# Initialize models through LangChain with correct model names
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
+vision_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
 
 # Error handling function
 def handle_error(error):
@@ -25,6 +26,7 @@ def handle_error(error):
 # Scene understanding function
 def scene_understanding(image):
     try:
+        # Generate detailed scene description using LangChain Vision model
         image_bytes = io.BytesIO()
         image.save(image_bytes, format='PNG')
         image_bytes = image_bytes.getvalue()
@@ -58,6 +60,7 @@ def scene_understanding(image):
 # Object detection function
 def detect_objects_and_obstacles(image):
     try:
+        # Detect objects and potential obstacles in the scene
         image_bytes = io.BytesIO()
         image.save(image_bytes, format='PNG')
         image_bytes = image_bytes.getvalue()
@@ -88,9 +91,10 @@ def detect_objects_and_obstacles(image):
     except Exception as e:
         handle_error(e)
 
-# Text extraction and processing
+# Text extraction function
 def extract_and_process_text(image):
     try:
+        # Extract and enhance text from image
         extracted_text = pytesseract.image_to_string(image)
 
         if not extracted_text.strip():
@@ -120,6 +124,7 @@ def extract_and_process_text(image):
 # Task assistance function
 def provide_task_assistance(image, task_type):
     try:
+        # Provide personalized assistance based on task type
         image_bytes = io.BytesIO()
         image.save(image_bytes, format='PNG')
         image_bytes = image_bytes.getvalue()
@@ -180,6 +185,7 @@ def provide_task_assistance(image, task_type):
 # Text-to-speech function
 def text_to_speech(text):
     try:
+        # Convert text to speech and return bytes for Streamlit audio player
         tts = gTTS(text=text, lang='en')
         mp3_fp = io.BytesIO()
         tts.write_to_fp(mp3_fp)
@@ -188,15 +194,14 @@ def text_to_speech(text):
     except Exception as e:
         handle_error(e)
 
-# Main app
 def main():
-    st.set_page_config(page_title="SeeForMe", layout="wide")
+    st.set_page_config(page_title="Vision Assistant", layout="wide")
 
     st.title("SeeForMe : AI Assistant for Visually Impaired")
 
-    st.sidebar.title("About SeeForMe")
+    st.sidebar.title("About the SeeForMe")
     st.sidebar.info(
-        "AI Assistant for Visually Impaired\n"
+         "AI Assistant for Visually Impaired\n"
         "• Upload any image to:\n"
         "• Get detailed scene descriptions\n"
         "• Read text from images\n"
@@ -204,20 +209,18 @@ def main():
         "• Receive task-specific guidance"
     )
 
+    # Main content
     uploaded_file = st.file_uploader("Upload an image", type=['jpg', 'jpeg', 'png'])
 
     if uploaded_file is not None:
-        try:
-            image = Image.open(uploaded_file).convert("RGB")
-        except Exception as e:
-            st.error("Invalid image. Please upload a valid JPG or PNG file.")
-            return
-
         col1, col2 = st.columns([1, 1])
+
         with col1:
+            image = Image.open(uploaded_file)
             st.image(image, caption="Uploaded Image", use_container_width=True)
 
         with col2:
+            # Feature selection
             feature = st.radio(
                 "Select Feature",
                 ["Scene Description", "Text Reading", "Object Detection", "Task Assistance"],
