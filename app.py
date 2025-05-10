@@ -4,7 +4,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_core.messages import HumanMessage
-import pytesseract
+# Remove pytesseract import
 from gtts import gTTS
 import io
 import base64
@@ -91,21 +91,48 @@ def detect_objects_and_obstacles(image):
     except Exception as e:
         handle_error(e)
 
-# Text extraction function
+# New text extraction function using Vision model instead of Tesseract
 def extract_and_process_text(image):
     try:
-        # Extract and enhance text from image
-        extracted_text = pytesseract.image_to_string(image)
-
+        # Convert image to bytes for the vision model
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format='PNG')
+        image_bytes = image_bytes.getvalue()
+        
+        # Use the vision model to extract text instead of Tesseract
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text",
+                    "text": """Extract all text visible in this image. 
+                    Focus specifically on:
+                    1. Clear, readable text
+                    2. Signs, labels, and titles
+                    3. Important numbers or dates
+                    4. Organized in a structured format
+                    
+                    Return ONLY the text content with no additional descriptions or explanations."""
+                },
+                {
+                    "type": "image_url",
+                    "image_url": f"data:image/png;base64,{base64.b64encode(image_bytes).decode()}"
+                }
+            ]
+        )
+        
+        # Get the raw text extraction from the vision model
+        extracted_text = vision_llm.invoke([message]).content
+        
         if not extracted_text.strip():
             return "No text detected in the image."
 
+        # Process and enhance the extracted text
         template = """
         Enhance and structure the following extracted text for a visually impaired person:
         TEXT: {text}
 
         Please:
-        1. Correct obvious OCR errors
+        1. Correct obvious errors
         2. Format text in clear sections
         3. Highlight important information
         4. Add relevant context
@@ -217,7 +244,6 @@ def main():
 
         with col1:
             image = Image.open(uploaded_file)
-            # Fixed line - removed use_container_width parameter
             st.image(image, caption="Uploaded Image", width=None)
 
         with col2:
@@ -229,7 +255,6 @@ def main():
             )
 
             if feature == "Scene Description":
-                # Fixed button - removed use_container_width parameter
                 if st.button("Analyze Scene"):
                     with st.spinner("Analyzing the scene..."):
                         description = scene_understanding(image)
@@ -238,7 +263,6 @@ def main():
                         st.audio(audio_bytes, format='audio/mp3')
 
             elif feature == "Text Reading":
-                # Fixed button - removed use_container_width parameter
                 if st.button("Extract & Read Text"):
                     with st.spinner("Processing text..."):
                         text_content = extract_and_process_text(image)
@@ -247,7 +271,6 @@ def main():
                         st.audio(audio_bytes, format='audio/mp3')
 
             elif feature == "Object Detection":
-                # Fixed button - removed use_container_width parameter
                 if st.button("Detect Objects"):
                     with st.spinner("Analyzing objects and obstacles..."):
                         objects_info = detect_objects_and_obstacles(image)
@@ -267,7 +290,6 @@ def main():
                     format_func=lambda x: x.replace('_', ' ').title()
                 )
 
-                # Fixed button - removed use_container_width parameter
                 if st.button("Get Assistance"):
                     with st.spinner("Generating guidance..."):
                         guidance = provide_task_assistance(image, task_type)
